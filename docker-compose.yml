@@ -8,24 +8,12 @@ services:
     volumes:
       - ./vosk-model-small-en-us-0.15:/app/vosk-model-small-en-us-0.15
       - ./test.wav:/app/test.wav
+      - ./.chroma:/app/.chroma
     devices:
       - /dev/snd:/dev/snd
     environment:
       - PYTHONUNBUFFERED=1
-    command: python test_vosk_service.py
-    networks:
-      - vosk-network
-
-  chromadb:
-    image: chromadb/chroma:latest
-    ports:
-      - "8000:8000"
-    volumes:
-      - chroma_data:/chroma/chroma
-    environment:
-      - ALLOW_RESET=true
-      - CHROMA_SERVER_HOST=0.0.0.0
-      - CHROMA_SERVER_HTTP_PORT=8000
+    command: /app/entrypoint.sh
     networks:
       - vosk-network
 

@@ -1,10 +1,9 @@
 import pyaudio
 import json
 from vosk import Model, KaldiRecognizer
-from sentence_transformers import SentenceTransformer
 import chromadb
-from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 import os
+from embedding_handler import ONNXEmbeddingHandler
 
 class VoskService:
     def __init__(self, model_path="vosk-model-small-en-us-0.15"):
@@ -16,21 +15,44 @@ class VoskService:
         """
         # Initialize Vosk
         self.model = Model(model_path)
-        self.samplerate = 16000
+        
+        # Get sample rate from environment variable if set by check_audio.py
+        if 'AUDIO_SAMPLE_RATE' in os.environ:
+            self.samplerate = int(os.environ['AUDIO_SAMPLE_RATE'])
+            print(f"Using audio sample rate from environment: {self.samplerate} Hz")
+        else:
+            self.samplerate = 16000  # Default rate for speech recognition
+            print(f"Using default audio sample rate: {self.samplerate} Hz")
+            
         self.p = pyaudio.PyAudio()
         self.stream = None
         self.recognizer = None
 
-        # Initialize ChromaDB
-        self.embedding_function = SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
-        self.chroma_client = chromadb.HttpClient(
-            host="chromadb",
-            port=8000
-        )
-        self.commands_collection = self.chroma_client.create_collection(
-            name="voice_commands",
-            embedding_function=self.embedding_function
-        )
+        # Initialize ONNX embeddings handler
+        self.embedding_handler = ONNXEmbeddingHandler()
+        
+        # Initialize ChromaDB (use PersistentClient instead of HttpClient)
+        # For local standalone usage
+        self.chroma_client = chromadb.Client()
+        
+        # Create a collection with embedding function from handler
+        try:
+            # Try to reset collection if it exists
+            try:
+                self.chroma_client.delete_collection("voice_commands")
+                print("Deleted existing voice_commands collection")
+            except:
+                pass
+            
+            # Create new collection
+            self.commands_collection = self.chroma_client.create_collection(
+                name="voice_commands",
+                embedding_function=self.embedding_handler.get_embedding_function()
+            )
+            print("Created new voice_commands collection")
+        except Exception as e:
+            print(f"Error creating ChromaDB collection: {str(e)}")
+            raise
 
     def add_command(self, command_id, command_text, action):
         """
@@ -49,15 +71,62 @@ class VoskService:
 
     def start(self):
         """Start the audio stream and recognizer"""
-        self.stream = self.p.open(
-            format=pyaudio.paInt16,
-            channels=1,
-            rate=self.samplerate,
-            input=True,
-            frames_per_buffer=4000
-        )
-        self.stream.start_stream()
-        self.recognizer = KaldiRecognizer(self.model, self.samplerate)
+        # Find a suitable input device
+        input_device_index = None
+        for i in range(self.p.get_device_count()):
+            device_info = self.p.get_device_info_by_index(i)
+            if device_info["maxInputChannels"] > 0:
+                input_device_index = i
+                print(f"Using input device: {device_info['name']}")
+                break
+        
+        if input_device_index is None:
+            print("No suitable input device found")
+        
+        # Define fallback sample rates
+        sample_rates = [
+            self.samplerate,  # Try the configured rate first
+            44100,  # Standard rate for most audio devices
+            48000,  # Another common rate
+            22050,  # Lower standard rate
+            8000    # Lowest rate for last resort
+        ]
+        
+        # Remove duplicates while preserving order
+        sample_rates = list(dict.fromkeys(sample_rates))
+        
+        stream_opened = False
+        for rate in sample_rates:
+            try:
+                print(f"Trying to open audio stream with sample rate: {rate} Hz")
+                self.stream = self.p.open(
+                    format=pyaudio.paInt16,
+                    channels=1,
+                    rate=rate,
+                    input=True,
+                    input_device_index=input_device_index,
+                    frames_per_buffer=4000
+                )
+                self.stream.start_stream()
+                
+                # Update samplerate if we're using a different one
+                if rate != self.samplerate:
+                    print(f"Using alternative sample rate: {rate} Hz")
+                    self.samplerate = rate
+                    # Update the environment variable
+                    os.environ['AUDIO_SAMPLE_RATE'] = str(rate)
+                    
+                self.recognizer = KaldiRecognizer(self.model, self.samplerate)
+                stream_opened = True
+                print(f"Successfully opened audio stream at {rate} Hz")
+                break
+            except Exception as e:
+                print(f"Failed to open stream at {rate} Hz: {str(e)}")
+        
+        if not stream_opened:
+            print("Could not open audio stream with any sample rate")
+            # If we have an error, just proceed without the stream for WAV file testing
+            self.recognizer = KaldiRecognizer(self.model, self.samplerate)
 
     def stop(self):
         """Stop the audio stream and cleanup"""
@@ -115,7 +184,11 @@ class VoskService:
         self.start()
         try:
             while True:
-                data = self.stream.read(4000)
+                if not self.stream:
+                    print("No audio stream available")
+                    break
+                    
+                data = self.stream.read(4000, exception_on_overflow=False)
                 result = self.predict(data)
                 
                 if result:
