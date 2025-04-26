@@ -3,6 +3,8 @@ import json
 from vosk import Model, KaldiRecognizer
 import chromadb
 import os
+import numpy as np
+from scipy import signal
 from embedding_handler import ONNXEmbeddingHandler
 
 class VoskService:
@@ -13,17 +15,11 @@ class VoskService:
         Args:
             model_path (str): Path to the Vosk model directory
         """
-        # Initialize Vosk
+        # Initialize Vosk - use fixed 16000 Hz sample rate for better recognition
         self.model = Model(model_path)
+        self.samplerate = 44100  # Fixed 16000 Hz - optimal for Vosk models
+        print(f"Using sample rate for recognition: {self.samplerate} Hz")
         
-        # Get sample rate from environment variable if set by check_audio.py
-        if 'AUDIO_SAMPLE_RATE' in os.environ:
-            self.samplerate = int(os.environ['AUDIO_SAMPLE_RATE'])
-            print(f"Using audio sample rate from environment: {self.samplerate} Hz")
-        else:
-            self.samplerate = 16000  # Default rate for speech recognition
-            print(f"Using default audio sample rate: {self.samplerate} Hz")
-            
         self.p = pyaudio.PyAudio()
         self.stream = None
         self.recognizer = None
@@ -70,63 +66,38 @@ class VoskService:
         )
 
     def start(self):
-        """Start the audio stream and recognizer"""
-        # Find a suitable input device
-        input_device_index = None
-        for i in range(self.p.get_device_count()):
-            device_info = self.p.get_device_info_by_index(i)
-            if device_info["maxInputChannels"] > 0:
-                input_device_index = i
-                print(f"Using input device: {device_info['name']}")
-                break
+        """Start the audio stream and recognizer - using simplified approach"""
+        print("Initializing audio stream...")
         
-        if input_device_index is None:
-            print("No suitable input device found")
-        
-        # Define fallback sample rates
-        sample_rates = [
-            self.samplerate,  # Try the configured rate first
-            44100,  # Standard rate for most audio devices
-            48000,  # Another common rate
-            22050,  # Lower standard rate
-            8000    # Lowest rate for last resort
-        ]
-        
-        # Remove duplicates while preserving order
-        sample_rates = list(dict.fromkeys(sample_rates))
-        
-        stream_opened = False
-        for rate in sample_rates:
-            try:
-                print(f"Trying to open audio stream with sample rate: {rate} Hz")
-                self.stream = self.p.open(
-                    format=pyaudio.paInt16,
-                    channels=1,
-                    rate=rate,
-                    input=True,
-                    input_device_index=input_device_index,
-                    frames_per_buffer=4000
-                )
-                self.stream.start_stream()
-                
-                # Update samplerate if we're using a different one
-                if rate != self.samplerate:
-                    print(f"Using alternative sample rate: {rate} Hz")
-                    self.samplerate = rate
-                    # Update the environment variable
-                    os.environ['AUDIO_SAMPLE_RATE'] = str(rate)
-                    
-                self.recognizer = KaldiRecognizer(self.model, self.samplerate)
-                stream_opened = True
-                print(f"Successfully opened audio stream at {rate} Hz")
-                break
-            except Exception as e:
-                print(f"Failed to open stream at {rate} Hz: {str(e)}")
-        
-        if not stream_opened:
-            print("Could not open audio stream with any sample rate")
+        try:
+            # Find default input device
+            for i in range(self.p.get_device_count()):
+                device_info = self.p.get_device_info_by_index(i)
+                if device_info["maxInputChannels"] > 0:
+                    print(f"Using input device: {device_info['name']}")
+                    input_device_index = i
+                    break
+            
+            # Open stream with fixed 16000 Hz rate - optimal for Vosk models
+            self.stream = self.p.open(
+                format=pyaudio.paInt16,
+                channels=1,
+                rate=self.samplerate,
+                input=True,
+                frames_per_buffer=4000
+            )
+            self.stream.start_stream()
+            print(f"Audio stream started at {self.samplerate} Hz")
+            
+            # Initialize recognizer with standard rate for Vosk
+            self.recognizer = KaldiRecognizer(self.model, self.samplerate)
+            print("Recognizer initialized")
+            
+        except Exception as e:
+            print(f"Error starting audio stream: {str(e)}")
             # If we have an error, just proceed without the stream for WAV file testing
             self.recognizer = KaldiRecognizer(self.model, self.samplerate)
+            print("Using recognizer without stream due to error")
 
     def stop(self):
         """Stop the audio stream and cleanup"""
@@ -134,6 +105,7 @@ class VoskService:
             self.stream.stop_stream()
             self.stream.close()
         self.p.terminate()
+        print("Audio stream stopped")
 
     def predict(self, data):
         """
@@ -176,55 +148,105 @@ class VoskService:
 
     def listen(self):
         """
-        Continuously listen and process audio from the microphone
+        Continuously listen and process audio from the microphone.
+        Simplified to match mainAudioLive.py functionality.
         
         Yields:
             dict: Recognition results with command matching
         """
         self.start()
+        print("Start speaking...")
+        
+        try:
+            while True:
+                if not self.stream:
+                    print("No audio stream available")
+                    break
+                
+                # Simple, direct reading from the stream - like in mainAudioLive.py
+                data = self.stream.read(8000, exception_on_overflow=False)
+                
+                # Process the audio data
+                if self.recognizer.AcceptWaveform(data):
+                    result_json = self.recognizer.Result()
+                    result = json.loads(result_json)
+                    
+                    if "text" in result and result["text"].strip():
+                        print(f"Recognized: {result['text']}")
+                        
+                        # Find matching command
+                        matched_text, action = self.find_matching_command(result["text"])
+                        if matched_text:
+                            result["matched_command"] = matched_text
+                            result["action"] = action
+                            print(f"Matched command: {matched_text}")
+                            print(f"Action: {action}")
+                        
+                        yield result
+                
+                # Handle partial results
+                partial_json = self.recognizer.PartialResult()
+                partial = json.loads(partial_json)
+                
+                if "partial" in partial and partial["partial"].strip():
+                    print(f"Listening: {partial['partial']}", end="\r")
+                    yield partial
+                
+        except Exception as e:
+            print(f"Error in listen loop: {str(e)}")
+        finally:
+            self.stop()
+            
+    def run_standalone(self):
+        """
+        Run the service in standalone mode, similar to mainAudioLive.py
+        """
+        # Add some example commands
+        self.add_command("1", "lock the doors", "lock_doors")
+        self.add_command("2", "unlock the doors", "unlock_doors")
+        self.add_command("3", "stop the car", "stop_the_car")
+        self.add_command("4", "turn on the headlights", "turn_on_the_headlights")
+        self.add_command("5", "open the window", "window_open")
+        self.add_command("6", "turn on the ac", "turn_on_the_ac")
+        
+        # Start recognizer
+        self.start()
+        print("Start speaking...")
+        
         try:
             while True:
                 if not self.stream:
                     print("No audio stream available")
                     break
                     
-                data = self.stream.read(4000, exception_on_overflow=False)
-                result = self.predict(data)
+                data = self.stream.read(8000, exception_on_overflow=False)
                 
-                if result:
-                    if "text" in result and result["text"]:
+                if self.recognizer.AcceptWaveform(data):
+                    result_json = self.recognizer.Result()
+                    result = json.loads(result_json)
+                    
+                    if "text" in result and result["text"].strip():
+                        print(f"\nRecognized: {result['text']}")
+                        
                         # Find matching command
                         matched_text, action = self.find_matching_command(result["text"])
                         if matched_text:
-                            result["matched_command"] = matched_text
-                            result["action"] = action
-                    yield result
+                            print(f"Matched Command: {matched_text}")
+                            print(f"Action: {action}")
+                
+                # Process partial results for interactive feedback
+                partial_json = self.recognizer.PartialResult()
+                partial = json.loads(partial_json)
+                
+                if "partial" in partial and partial["partial"]:
+                    print(f"Listening: {partial['partial']}", end="\r")
+                    
+        except KeyboardInterrupt:
+            print("\nStopping recognition...")
         finally:
             self.stop()
 
 if __name__ == "__main__":
-    # Example usage
+    # Example usage - run standalone like mainAudioLive.py
     service = VoskService()
-    
-    # Add some example commands
-    service.add_command("1", "lock the doors", "lock_doors")
-    service.add_command("2", "unlock the doors", "unlock_doors")
-    service.add_command("3", "stop the car", "stop_the_car")
-    service.add_command("4", "turn on the headlights", "turn_on_the_headlights")
-    service.add_command("5", "open the window", "window_open")
-    service.add_command("6", "turn on the ac", "turn_on_the_ac")
-    
-    print("Start speaking...")
-    try:
-        for result in service.listen():
-            if "text" in result and result["text"]:
-                print(f"\nRecognized: {result['text']}")
-                if "matched_command" in result:
-                    print(f"Matched Command: {result['matched_command']}")
-                    print(f"Action: {result['action']}")
-            elif "partial" in result and result["partial"]:
-                print(f"Listening: {result['partial']}", end="\r")
-    except KeyboardInterrupt:
-        print("\nStopping recognition...")
-    finally:
-        service.stop() 
+    service.run_standalone() 
