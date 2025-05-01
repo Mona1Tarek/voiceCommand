@@ -20,7 +20,7 @@ class VoskService:
         # Initialize Vosk - use fixed 16000 Hz sample rate for better recognition
         self.model = Model(model_path)
         self.samplerate = 16000  # Fixed 16000 Hz - optimal for Vosk models
-        self.frames_per_buffer = 4000
+        self.frames_per_buffer = 1024  # Number of frames per buffer
         print(f"Using sample rate for recognition: {self.samplerate} Hz")
         
         self.p = pyaudio.PyAudio()

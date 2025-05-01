@@ -20,7 +20,7 @@ services:
       - PYTHONUNBUFFERED=1
       - PULSE_SERVER=unix:/run/pulse/native
       - PULSE_COOKIE=/root/.config/pulse/cookie
-    # command: /app/entrypoint.sh
+    command: /app/entrypoint.sh
     networks:
       - vosk-network
     tty: true
