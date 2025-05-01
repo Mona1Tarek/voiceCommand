@@ -43,6 +43,11 @@ RUN wget --tries=2 --timeout=10 -O /build/onnx-models/all-MiniLM-L6-v2-onnx/mode
     (echo "Warning: Failed to download ONNX model. Will create dummy model." && \
      python3 create_dummy_model.py)
 
+RUN wget --tries=2 --timeout=10 -O /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip \
+        https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
+RUN unzip /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip -d /build/vosk-model-small-en-us-0.15 && \
+    rm /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip
+
 # Copy the Vosk model
 COPY vosk-model-small-en-us-0.15 /build/vosk-model-small-en-us-0.15
 
