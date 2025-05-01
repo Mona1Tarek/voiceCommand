@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     libasound2-dev \
     alsa-utils \
     wget \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
