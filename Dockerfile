@@ -70,7 +70,7 @@ COPY --from=builder /build/venv /app/venv
 # Copy only the necessary files for production
 COPY --from=builder /build/vosk-model-small-en-us-0.15 /app/vosk-model-small-en-us-0.15
 COPY --from=builder /build/onnx-models /app/onnx-models
-COPY vosk_service.py embedding_handler.py test_vosk_service.py /app/
+COPY src /app/src
 
 # Create a simple entrypoint script
 COPY entrypoint.sh /app/entrypoint.sh
