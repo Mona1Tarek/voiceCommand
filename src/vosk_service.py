@@ -73,6 +73,7 @@ class VoskService:
         try:
             # Find default input device
             for i in range(self.p.get_device_count()):
+                print(f"Device {i}: {self.p.get_device_info_by_index(i)['name']}")
                 device_info = self.p.get_device_info_by_index(i)
                 if device_info["maxInputChannels"] > 0:
                     print(f"Using input device: {device_info['name']}")

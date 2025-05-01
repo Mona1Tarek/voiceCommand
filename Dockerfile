@@ -74,7 +74,7 @@ WORKDIR /app
 COPY --from=builder /build/venv /app/venv
 
 # Copy only the necessary files for production
-COPY --from=builder /build/vosk-model-small-en-us /app/vosk-model-small-en-us
+COPY --from=builder /build/vosk-model-small-en-us-0.15 /app/vosk-model-small-en-us
 COPY --from=builder /build/onnx-models /app/onnx-models
 # COPY src /app/src
 
