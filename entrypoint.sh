@@ -16,7 +16,7 @@ export PYTHONPATH="/app"
 
 # Start the voice service in standalone mode with direct audio recognition
 echo "Starting voice command service..."
-python3 vosk_service.py
+python3 src/vosk_service.py
 
 # If any specific command passed, execute it instead
 if [ $# -gt 0 ]; then

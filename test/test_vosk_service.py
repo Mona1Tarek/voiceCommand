@@ -2,12 +2,12 @@ import time
 import wave
 import json
 from vosk import Model, KaldiRecognizer
-from vosk_service import VoskService
+from src.vosk_service import VoskService
 
 def test_basic_recognition():
     """Test basic speech recognition functionality"""
     print("\n=== Testing Basic Recognition ===")
-    service = VoskService(model_path="vosk-model-small-en-us-0.15")
+    service = VoskService(model_path="../vosk-model-small-en-us-0.15")
     
     try:
         service.start()
@@ -32,7 +32,7 @@ def test_basic_recognition():
 def test_continuous_listening():
     """Test continuous listening with the generator method"""
     print("\n=== Testing Continuous Listening ===")
-    service = VoskService(model_path="vosk-model-small-en-us-0.15")
+    service = VoskService(model_path="../vosk-model-small-en-us-0.15")
     
     print("Start speaking (press Ctrl+C to stop)...")
     try:
@@ -49,7 +49,7 @@ def test_continuous_listening():
 def test_custom_model_path():
     """Test using a custom model path"""
     print("\n=== Testing Custom Model Path ===")
-    custom_model_path = "vosk-model-small-en-us-0.15"
+    custom_model_path = "../vosk-model-small-en-us-0.15"
     service = VoskService(model_path=custom_model_path)
     
     try:
@@ -75,7 +75,7 @@ def test_wav_file_with_commands():
     
     try:
         # Initialize service
-        service = VoskService(model_path="vosk-model-small-en-us-0.15")
+        service = VoskService(model_path="../vosk-model-small-en-us-0.15")
         
         # Add test commands
         service.add_command("1", "lock the doors", "lock_doors")

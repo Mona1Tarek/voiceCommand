@@ -1,5 +1,5 @@
 import numpy as np
-from embedding_handler import ONNXEmbeddingHandler
+from src.embedding_handler import ONNXEmbeddingHandler
 
 def test_embedding_handler():
     """Test the ONNXEmbeddingHandler functionality"""

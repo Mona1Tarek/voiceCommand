@@ -47,11 +47,6 @@ RUN wget --tries=2 --timeout=10 -O /build/onnx-models/all-MiniLM-L6-v2-onnx/mode
 # Copy the Vosk model
 COPY vosk-model-small-en-us-0.15 /build/vosk-model-small-en-us-0.15
 
-# Run tests in the build stage (with || true to continue even if tests fail)
-RUN echo "Running ONNX embedding test..." && \
-    python3 test_embedding.py || true
-RUN echo "Running Vosk service test..." && \
-    python3 test_vosk_service.py || true
 
 # Final production stage
 FROM ubuntu:22.04
@@ -84,4 +79,4 @@ COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Default command: run the entrypoint script
-CMD ["/app/entrypoint.sh"] 
+# CMD ["/app/entrypoint.sh"] 
