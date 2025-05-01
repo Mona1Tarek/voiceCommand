@@ -28,10 +28,9 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 RUN pip3 install pyaudio scipy
 
 # Copy the source code for testing
-COPY embedding_handler.py .
-COPY vosk_service.py .
-COPY test_embedding.py test_vosk_service.py check_audio.py ./
-COPY test.wav ./
+COPY src/embedding_handler.py .
+COPY src/vosk_service.py .
+COPY data/test.wav ./
 
 # Create directory for ONNX models
 RUN mkdir -p /build/onnx-models/all-MiniLM-L6-v2-onnx
@@ -46,7 +45,6 @@ RUN wget --tries=2 --timeout=10 -O /build/onnx-models/all-MiniLM-L6-v2-onnx/mode
 
 # Copy the Vosk model
 COPY vosk-model-small-en-us-0.15 /build/vosk-model-small-en-us-0.15
-
 
 # Final production stage
 FROM ubuntu:22.04
