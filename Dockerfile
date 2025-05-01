@@ -48,9 +48,6 @@ RUN wget --tries=2 --timeout=10 -O /build/vosk-model-small-en-us-0.15/vosk-model
 RUN unzip /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip -d /build/vosk-model-small-en-us-0.15 && \
     rm /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip
 
-# Copy the Vosk model
-COPY vosk-model-small-en-us-0.15 /build/vosk-model-small-en-us-0.15
-
 # Final production stage
 FROM ubuntu:22.04
 
