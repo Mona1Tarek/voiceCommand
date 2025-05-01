@@ -7,7 +7,7 @@ from src.vosk_service import VoskService
 def test_basic_recognition():
     """Test basic speech recognition functionality"""
     print("\n=== Testing Basic Recognition ===")
-    service = VoskService(model_path="../vosk-model-small-en-us-0.15")
+    service = VoskService()
     
     try:
         service.start()
@@ -32,7 +32,7 @@ def test_basic_recognition():
 def test_continuous_listening():
     """Test continuous listening with the generator method"""
     print("\n=== Testing Continuous Listening ===")
-    service = VoskService(model_path="../vosk-model-small-en-us-0.15")
+    service = VoskService()
     
     print("Start speaking (press Ctrl+C to stop)...")
     try:
@@ -49,8 +49,7 @@ def test_continuous_listening():
 def test_custom_model_path():
     """Test using a custom model path"""
     print("\n=== Testing Custom Model Path ===")
-    custom_model_path = "../vosk-model-small-en-us-0.15"
-    service = VoskService(model_path=custom_model_path)
+    service = VoskService()
     
     try:
         service.start()
@@ -75,7 +74,7 @@ def test_wav_file_with_commands():
     
     try:
         # Initialize service
-        service = VoskService(model_path="../vosk-model-small-en-us-0.15")
+        service = VoskService()
         
         # Add test commands
         service.add_command("1", "lock the doors", "lock_doors")
@@ -88,7 +87,7 @@ def test_wav_file_with_commands():
         wf = None
         try:
             # Open the WAV file
-            wf = wave.open("test.wav", "rb")
+            wf = wave.open("data/test.wav", "rb")
             
             # Check if the audio format is compatible
             if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getcomptype() != "NONE":

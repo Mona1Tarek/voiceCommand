@@ -28,10 +28,10 @@ COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 RUN pip3 install pyaudio scipy
 
-# Copy the source code for testing
-COPY src/embedding_handler.py .
-COPY src/vosk_service.py .
-COPY data/test.wav ./
+# # Copy the source code for testing
+# COPY src/embedding_handler.py .
+# COPY src/vosk_service.py .
+# COPY data/test.wav ./
 
 # Create directory for ONNX models
 RUN mkdir -p /build/onnx-models/all-MiniLM-L6-v2-onnx
@@ -45,12 +45,12 @@ RUN wget --tries=2 --timeout=10 -O /build/onnx-models/all-MiniLM-L6-v2-onnx/mode
 
 
 # Create directory for VOSK model
-RUN mkdir -p /build/vosk-model-small-en-us-0.15
+RUN mkdir -p /build/vosk-model-small-en-us
 
-RUN wget --tries=2 --timeout=10 -O /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip \
+RUN wget --tries=2 --timeout=10 -O /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip \
         https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
-RUN unzip /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip -d /build/vosk-model-small-en-us-0.15 && \
-    rm /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip
+RUN unzip /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip -d /build/vosk-model-small-en-us-0.15 && \
+    rm /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip
 
 # Final production stage
 FROM ubuntu:22.04
@@ -74,9 +74,9 @@ WORKDIR /app
 COPY --from=builder /build/venv /app/venv
 
 # Copy only the necessary files for production
-COPY --from=builder /build/vosk-model-small-en-us-0.15 /app/vosk-model-small-en-us-0.15
+COPY --from=builder /build/vosk-model-small-en-us /app/vosk-model-small-en-us
 COPY --from=builder /build/onnx-models /app/onnx-models
-COPY src /app/src
+# COPY src /app/src
 
 # Create a simple entrypoint script
 COPY entrypoint.sh /app/entrypoint.sh

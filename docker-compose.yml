@@ -2,20 +2,24 @@ version: '3.8'
 
 services:
   vosk-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: htmmhmd/voice-command:latest
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     volumes:
-      - ./vosk-model-small-en-us-0.15:/app/vosk-model-small-en-us-0.15
-      - ./test.wav:/app/test.wav
       - ./.chroma:/app/.chroma
+      - ./test:/app/test
+      - ./src:/app/src
+      - ./data:/app/data
     devices:
       - /dev/snd:/dev/snd
     environment:
       - PYTHONUNBUFFERED=1
-    command: /app/entrypoint.sh
+    # command: /app/entrypoint.sh
     networks:
       - vosk-network
+    tty: true
+    stdin_open: true
 
 networks:
   vosk-network:

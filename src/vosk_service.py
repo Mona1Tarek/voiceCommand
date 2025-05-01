@@ -8,7 +8,7 @@ from scipy import signal
 from embedding_handler import ONNXEmbeddingHandler
 
 class VoskService:
-    def __init__(self, model_path="vosk-model-small-en-us-0.15"):
+    def __init__(self, model_path="vosk-model-small-en-us/vosk-model-small-en-us-0.15"):
         """
         Initialize the Vosk speech recognition service with ChromaDB integration.
         
@@ -17,7 +17,8 @@ class VoskService:
         """
         # Initialize Vosk - use fixed 16000 Hz sample rate for better recognition
         self.model = Model(model_path)
-        self.samplerate = 44100  # Fixed 16000 Hz - optimal for Vosk models
+        self.samplerate = 16000  # Fixed 16000 Hz - optimal for Vosk models
+        self.frames_per_buffer = 4000
         print(f"Using sample rate for recognition: {self.samplerate} Hz")
         
         self.p = pyaudio.PyAudio()
@@ -84,7 +85,8 @@ class VoskService:
                 channels=1,
                 rate=self.samplerate,
                 input=True,
-                frames_per_buffer=4000
+                frames_per_buffer=self.frames_per_buffer,
+                input_device_index=4
             )
             self.stream.start_stream()
             print(f"Audio stream started at {self.samplerate} Hz")
@@ -164,13 +166,15 @@ class VoskService:
                     break
                 
                 # Simple, direct reading from the stream - like in mainAudioLive.py
-                data = self.stream.read(8000, exception_on_overflow=False)
+                data = self.stream.read(self.frames_per_buffer, exception_on_overflow=False)
                 
                 # Process the audio data
                 if self.recognizer.AcceptWaveform(data):
                     result_json = self.recognizer.Result()
                     result = json.loads(result_json)
-                    
+                    print(f"Result JSON: {result}")
+
+
                     if "text" in result and result["text"].strip():
                         print(f"Recognized: {result['text']}")
                         
@@ -209,38 +213,14 @@ class VoskService:
         self.add_command("5", "open the window", "window_open")
         self.add_command("6", "turn on the ac", "turn_on_the_ac")
         
-        # Start recognizer
-        self.start()
-        print("Start speaking...")
-        
         try:
-            while True:
-                if not self.stream:
-                    print("No audio stream available")
-                    break
+            for result in self.listen():
+                if "text" in result and result["text"].strip():
+                    print(f"\nRecognized: {result['text']}")
                     
-                data = self.stream.read(8000, exception_on_overflow=False)
-                
-                if self.recognizer.AcceptWaveform(data):
-                    result_json = self.recognizer.Result()
-                    result = json.loads(result_json)
-                    
-                    if "text" in result and result["text"].strip():
-                        print(f"\nRecognized: {result['text']}")
-                        
-                        # Find matching command
-                        matched_text, action = self.find_matching_command(result["text"])
-                        if matched_text:
-                            print(f"Matched Command: {matched_text}")
-                            print(f"Action: {action}")
-                
-                # Process partial results for interactive feedback
-                partial_json = self.recognizer.PartialResult()
-                partial = json.loads(partial_json)
-                
-                if "partial" in partial and partial["partial"]:
-                    print(f"Listening: {partial['partial']}", end="\r")
-                    
+                    if "matched_command" in result:
+                        print(f"Matched Command: {result['matched_command']}")
+                        print(f"Action: {result['action']}")
         except KeyboardInterrupt:
             print("\nStopping recognition...")
         finally:
@@ -249,4 +229,4 @@ class VoskService:
 if __name__ == "__main__":
     # Example usage - run standalone like mainAudioLive.py
     service = VoskService()
-    service.run_standalone() 
+    service.run_standalone()
