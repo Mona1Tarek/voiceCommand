@@ -61,11 +61,16 @@ ENV PYTHONUNBUFFERED=1
 ENV PATH="/app/venv/bin:$PATH"
 ENV PYTHONPATH="/app"
 
-# Install only minimal runtime dependencies
+# Install only minimal runtime dependencies plus PulseAudio client
 RUN apt-get update && apt-get install -y \
     python3 python3-venv \
     libasound-dev libportaudio2 libportaudiocpp0 \
+    pulseaudio-utils pulseaudio \
+    alsa-utils \
     && rm -rf /var/lib/apt/lists/*
+
+# Create pulse config directory
+RUN mkdir -p /etc/pulse
 
 # Set working directory
 WORKDIR /app
@@ -83,4 +88,4 @@ COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Default command: run the entrypoint script
-# CMD ["/app/entrypoint.sh"] 
+# CMD ["/app/entrypoint.sh"]

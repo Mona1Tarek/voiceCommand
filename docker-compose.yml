@@ -12,10 +12,14 @@ services:
       - ./test:/app/test
       - ./src:/app/src
       - ./data:/app/data
+      - /run/user/1000/pulse:/run/pulse:ro  # PulseAudio socket
+      - ${HOME}/.config/pulse/cookie:/root/.config/pulse/cookie:ro
     devices:
       - /dev/snd:/dev/snd
     environment:
       - PYTHONUNBUFFERED=1
+      - PULSE_SERVER=unix:/run/pulse/native
+      - PULSE_COOKIE=/root/.config/pulse/cookie
     # command: /app/entrypoint.sh
     networks:
       - vosk-network
@@ -28,4 +32,4 @@ networks:
 
 volumes:
   chroma_data:
-    driver: local 
+    driver: local

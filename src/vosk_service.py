@@ -6,14 +6,16 @@ import os
 import numpy as np
 from scipy import signal
 from embedding_handler import ONNXEmbeddingHandler
+import sys
 
 class VoskService:
-    def __init__(self, model_path="vosk-model-small-en-us/vosk-model-small-en-us-0.15"):
+    def __init__(self, model_path="vosk-model-small-en-us/vosk-model-small-en-us-0.15", input_device_index=None):
         """
         Initialize the Vosk speech recognition service with ChromaDB integration.
         
         Args:
             model_path (str): Path to the Vosk model directory
+            input_device_index (int, optional): Index of input device to use. If None, will attempt to auto-detect.
         """
         # Initialize Vosk - use fixed 16000 Hz sample rate for better recognition
         self.model = Model(model_path)
@@ -24,7 +26,8 @@ class VoskService:
         self.p = pyaudio.PyAudio()
         self.stream = None
         self.recognizer = None
-
+        self.input_device_index = input_device_index
+        
         # Initialize ONNX embeddings handler
         self.embedding_handler = ONNXEmbeddingHandler()
         
@@ -71,14 +74,22 @@ class VoskService:
         print("Initializing audio stream...")
         
         try:
-            # Find default input device
+            # List all available audio devices
+            print("\n=== Available Audio Input Devices ===")
+            default_device_index = self.p.get_default_input_device_info()['index'] if self.input_device_index is None else self.input_device_index
+            print(f"Default input device index: {default_device_index}")
+            
             for i in range(self.p.get_device_count()):
-                print(f"Device {i}: {self.p.get_device_info_by_index(i)['name']}")
                 device_info = self.p.get_device_info_by_index(i)
                 if device_info["maxInputChannels"] > 0:
-                    print(f"Using input device: {device_info['name']}")
-                    input_device_index = i
-                    break
+                    print(f"Device {i}: {device_info['name']}")
+                    if "pulse" in device_info['name'].lower() and self.input_device_index is None:
+                        default_device_index = i
+                        print(f"  Auto-selected PulseAudio device")
+            
+            # Use the detected device index or the one provided
+            input_device_index = default_device_index
+            print(f"Using input device index: {input_device_index}")
             
             # Open stream with fixed 16000 Hz rate - optimal for Vosk models
             self.stream = self.p.open(
@@ -87,7 +98,7 @@ class VoskService:
                 rate=self.samplerate,
                 input=True,
                 frames_per_buffer=self.frames_per_buffer,
-                input_device_index=4
+                input_device_index=input_device_index
             )
             self.stream.start_stream()
             print(f"Audio stream started at {self.samplerate} Hz")
@@ -228,6 +239,12 @@ class VoskService:
             self.stop()
 
 if __name__ == "__main__":
+    # Check if an input device index is provided as a command line argument
+    input_device_index = None
+    if len(sys.argv) > 1 and sys.argv[1].isdigit():
+        input_device_index = int(sys.argv[1])
+        print(f"Using command line provided input device index: {input_device_index}")
+    
     # Example usage - run standalone like mainAudioLive.py
-    service = VoskService()
+    service = VoskService(input_device_index=input_device_index)
     service.run_standalone()
