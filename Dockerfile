@@ -40,8 +40,11 @@ RUN wget --tries=2 --timeout=10 -O /build/onnx-models/all-MiniLM-L6-v2-onnx/mode
     https://huggingface.co/onnx-models/all-MiniLM-L6-v2-onnx/resolve/main/model.onnx || \
     wget --tries=2 --timeout=10 -O /build/onnx-models/all-MiniLM-L6-v2-onnx/model.onnx \
     https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/model.onnx || \
-    (echo "Warning: Failed to download ONNX model. Will create dummy model." && \
-     python3 create_dummy_model.py)
+    (echo "Warning: Failed to download ONNX model.  " )
+
+
+# Create directory for VOSK model
+RUN mkdir -p /build/vosk-model-small-en-us-0.15
 
 RUN wget --tries=2 --timeout=10 -O /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip \
         https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
