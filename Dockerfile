@@ -67,6 +67,7 @@ RUN apt-get update && apt-get install -y \
     libasound-dev libportaudio2 libportaudiocpp0 \
     pulseaudio-utils pulseaudio \
     alsa-utils \
+    libatomic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create pulse config directory
