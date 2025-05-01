@@ -7,7 +7,7 @@ services:
     #   context: .
     #   dockerfile: Dockerfile
     volumes:
-      - ./vosk-model-small-en-us:/app/vosk-model-small-en-us
+      - ./vosk-model-small-en-us-0.15:/app/vosk-model-small-en-us
       - ./.chroma:/app/.chroma
       - ./test:/app/test
       - ./src:/app/src
