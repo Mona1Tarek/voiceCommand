@@ -7,7 +7,7 @@ services:
     #   context: .
     #   dockerfile: Dockerfile
     volumes:
-      - ./vosk-model-small-en-us:/app/vosk-model-small-en-us
+      - ./vosk-model-small-en-us-0.15:/app/vosk-model-small-en-us
       - ./.chroma:/app/.chroma
       - ./test:/app/test
       - ./src:/app/src
@@ -20,7 +20,7 @@ services:
       - PYTHONUNBUFFERED=1
       - PULSE_SERVER=unix:/run/pulse/native
       - PULSE_COOKIE=/root/.config/pulse/cookie
-    # command: /app/entrypoint.sh
+    command: /app/entrypoint.sh
     networks:
       - vosk-network
     tty: true
