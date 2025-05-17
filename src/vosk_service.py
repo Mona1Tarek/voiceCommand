@@ -10,7 +10,7 @@ import sys
 import zmq 
 
 class VoskService:
-    def __init__(self, model_path="vosk-model-small-en-us/vosk-model-small-en-us-0.15", input_device_index=None, zmq_port=5555):
+    def __init__(self, model_path = "/app/vosk-model-small-en-us", input_device_index=None, zmq_port=5555):
         """
         Initialize the Vosk speech recognition service with ChromaDB integration.
         

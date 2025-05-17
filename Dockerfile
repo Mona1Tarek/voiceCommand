@@ -45,12 +45,12 @@ RUN wget --tries=2 --timeout=10 -O /build/onnx-models/all-MiniLM-L6-v2-onnx/mode
 
 
 # Create directory for VOSK model
-RUN mkdir -p /build/vosk-model-small-en-us-0.15
+RUN mkdir -p /build/vosk-model-small-en-us
 
-RUN wget --tries=2 --timeout=10 -O /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip \
+RUN wget --tries=2 --timeout=10 -O /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip \
         https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
-RUN unzip /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip -d /build/vosk-model-small-en-us-0.15 && \
-    rm /build/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15.zip
+RUN unzip /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip -d /build/vosk-model-small-en-us-0.15 && \
+    rm /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip
 
 # Final production stage
 FROM ubuntu:22.04
@@ -67,7 +67,6 @@ RUN apt-get update && apt-get install -y \
     libasound-dev libportaudio2 libportaudiocpp0 \
     pulseaudio-utils pulseaudio \
     alsa-utils \
-    libatomic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create pulse config directory
@@ -80,7 +79,7 @@ WORKDIR /app
 COPY --from=builder /build/venv /app/venv
 
 # Copy only the necessary files for production
-COPY --from=builder /build/vosk-model-small-en-us-0.15 /app/vosk-model-small-en-us-0.15
+COPY --from=builder /build/vosk-model-small-en-us-0.15 /app/vosk-model-small-en-us
 COPY --from=builder /build/onnx-models /app/onnx-models
 # COPY src /app/src
 
