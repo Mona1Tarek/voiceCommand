@@ -7,16 +7,25 @@ import numpy as np
 from scipy import signal
 from embedding_handler import ONNXEmbeddingHandler
 import sys
+import zmq 
 
 class VoskService:
-    def __init__(self, model_path="vosk-model-small-en-us/vosk-model-small-en-us-0.15", input_device_index=None):
+    def __init__(self, model_path="vosk-model-small-en-us/vosk-model-small-en-us-0.15", input_device_index=None, zmq_port=5555):
         """
         Initialize the Vosk speech recognition service with ChromaDB integration.
         
         Args:
             model_path (str): Path to the Vosk model directory
             input_device_index (int, optional): Index of input device to use. If None, will attempt to auto-detect.
+            zmq_port (int, optional): Port number for ZMQ publisher. Defaults to 5555.
         """
+
+        # Initialize ZMQ publisher
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.PUB)
+        self.socket.bind(f"tcp://*:{zmq_port}")
+        print(f"ZMQ publisher started on port {zmq_port}")
+        
         # Initialize Vosk - use fixed 16000 Hz sample rate for better recognition
         self.model = Model(model_path)
         self.samplerate = 16000  # Fixed 16000 Hz - optimal for Vosk models
@@ -119,6 +128,8 @@ class VoskService:
             self.stream.stop_stream()
             self.stream.close()
         self.p.terminate()
+        self.socket.close()
+        self.context.term()
         print("Audio stream stopped")
 
     def predict(self, data):
@@ -197,6 +208,10 @@ class VoskService:
                             result["action"] = action
                             print(f"Matched command: {matched_text}")
                             print(f"Action: {action}")
+
+                            # Publish the action via ZMQ
+                            self.socket.send_string(f"action {action}")
+                            print(f"Published action: {action}")
                         
                         yield result
                 
@@ -241,10 +256,17 @@ class VoskService:
 if __name__ == "__main__":
     # Check if an input device index is provided as a command line argument
     input_device_index = None
+    zmq_port = 5555  # Default ZMQ port
+
     if len(sys.argv) > 1 and sys.argv[1].isdigit():
         input_device_index = int(sys.argv[1])
         print(f"Using command line provided input device index: {input_device_index}")
     
+    if len(sys.argv) > 2:
+        if sys.argv[2].isdigit():
+            zmq_port = int(sys.argv[2])
+            print(f"Using command line provided ZMQ port: {zmq_port}")
+    
     # Example usage - run standalone like mainAudioLive.py
-    service = VoskService(input_device_index=input_device_index)
+    service = VoskService(input_device_index=input_device_index, zmq_port=zmq_port)
     service.run_standalone()
