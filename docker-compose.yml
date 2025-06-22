@@ -16,7 +16,7 @@ services:
       - ./src:/app/src
       - ./data:/app/data
       - /run/user/1000/pulse:/run/pulse:ro  # PulseAudio socket
-      - ${HOME}/.config/pulse/cookie:/root/.config/pulse/cookie:ro
+      - /home/pi/.config/pulse/cookie:/root/.config/pulse/cookie:ro
     devices:
       - /dev/snd:/dev/snd
     environment:
