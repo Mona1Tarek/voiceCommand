@@ -30,7 +30,7 @@ RUN pip3 install pyaudio scipy
 
 # # Copy the source code for testing
 # COPY src/embedding_handler.py .
-# COPY src/vosk_service.py .
+COPY src/vosk_service.py .
 # COPY data/test.wav ./
 
 # Create directory for ONNX models
