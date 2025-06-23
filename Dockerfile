@@ -27,6 +27,9 @@ RUN pip3 install --upgrade pip
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
+
+RUN pip3 install pyzmq
+
 RUN pip3 install pyaudio scipy
 
 # Copy the source code
