@@ -28,9 +28,9 @@ RUN pip3 install --upgrade pip
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-RUN pip3 install pyzmq
+RUN /build/venv/bin/pip install pyzmq
 
-RUN pip3 install pyaudio scipy
+RUN /build/venv/bin/pip install pyaudio scipy
 
 # Copy the source code
 COPY src /build/src
