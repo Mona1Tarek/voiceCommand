@@ -61,7 +61,14 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy installed Python packages from builder
-COPY --from=builder /usr/local/lib/python3.*/dist-packages /usr/local/lib/python3.*/dist-packages
+# COPY --from=builder /usr/local/lib/python3.*/dist-packages /usr/local/lib/python3.*/dist-packages
+
+ARG PY_VER=3.10
+
+# Copy site-packages properly
+COPY --from=builder /usr/local/lib/python${PY_VER}/dist-packages /usr/local/lib/python${PY_VER}/dist-packages
+COPY --from=builder /usr/local/lib/python${PY_VER}/site-packages /usr/local/lib/python${PY_VER}/site-packages
+
 
 # Copy the required models
 COPY --from=builder /build/vosk-model-small-en-us-0.15 /app/vosk-model-small-en-us
