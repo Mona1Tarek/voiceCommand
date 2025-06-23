@@ -91,4 +91,5 @@ COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Default command
-# CMD ["/app/entrypoint.sh"]
+CMD ["/app/venv/bin/python3", "/app/src/vosk_service.py"]
+
