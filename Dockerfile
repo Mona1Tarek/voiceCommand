@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Install build dependencies including libzmq3-dev for pyzmq
 RUN apt-get update && apt-get install -y \
-    python3.10 python3.10-pip python3.10-dev build-essential \
+    python3 python3-pip python3-dev build-essential \
     libzmq3-dev \
     libasound-dev libportaudio2 libportaudiocpp0 portaudio19-dev \
     pulseaudio-utils pulseaudio \
@@ -51,7 +51,7 @@ ENV PYTHONPATH="/app"
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
-    python3.10 python3.10-pip \
+    python3 python3-pip \
     libasound-dev libportaudio2 libportaudiocpp0 \
     pulseaudio-utils pulseaudio \
     alsa-utils \
