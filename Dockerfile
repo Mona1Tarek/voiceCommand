@@ -51,18 +51,11 @@ ENV PYTHONPATH="/app"
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
-    python3 python3-pip python3-dev \
+    python3 python3-pip \
     libasound-dev libportaudio2 libportaudiocpp0 \
-    libzmq3-dev \
     pulseaudio-utils pulseaudio \
     alsa-utils \
     && rm -rf /var/lib/apt/lists/*
-
-
-# Install Python packages again here so the live-mounted code works
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
-RUN pip3 install pyzmq pyaudio scipy
 
 # Set working directory
 WORKDIR /app
