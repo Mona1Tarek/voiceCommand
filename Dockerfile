@@ -58,11 +58,14 @@ RUN apt-get update && apt-get install -y \
     alsa-utils \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy everything installed in builder
+COPY --from=builder /usr/local /usr/local
+
+# Force reinstall pyzmq directly in final stage
+RUN pip3 install --force-reinstall pyzmq
+
 # Set working directory
 WORKDIR /app
-
-# Copy installed Python packages from builder
-COPY --from=builder /usr/local /usr/local
 
 # Copy the required models
 COPY --from=builder /build/vosk-model-small-en-us-0.15 /app/vosk-model-small-en-us
@@ -76,6 +79,8 @@ RUN python3 -c "import zmq; print('ZMQ Installed:', zmq.__version__)"
 # Copy entrypoint
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Start the app
 #CMD ["python3", "/app/src/vosk_service.py"]
+
