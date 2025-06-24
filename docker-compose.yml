@@ -13,7 +13,7 @@ services:
     
       - ./.chroma:/app/.chroma
       - ./test:/app/test
-      # - ./src:/app/src
+      - ./src:/app/src
       - ./data:/app/data
       - /run/user/1000/pulse:/run/pulse:ro  # PulseAudio socket
       - /home/pi/.config/pulse/cookie:/root/.config/pulse/cookie:ro
