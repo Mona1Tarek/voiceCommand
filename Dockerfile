@@ -77,4 +77,4 @@ COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Start the app
-CMD ["python3", "/app/src/vosk_service.py"]
+#CMD ["python3", "/app/src/vosk_service.py"]
