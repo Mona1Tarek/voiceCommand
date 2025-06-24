@@ -57,6 +57,8 @@ RUN apt-get update && apt-get install -y \
     alsa-utils \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pip3 install pyzmq
+
 # Set working directory
 WORKDIR /app
 
