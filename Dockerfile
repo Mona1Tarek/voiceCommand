@@ -40,7 +40,9 @@ RUN wget --tries=2 --timeout=10 -O /build/onnx-models/all-MiniLM-L6-v2-onnx/mode
 RUN mkdir -p /build/vosk-model-small-en-us
 RUN wget --tries=2 --timeout=10 -O /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip \
     https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip && \
-    unzip /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip -d /build/vosk-model-small-en-us && \
+    unzip /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip -d /build/vosk-model-small-en-us/temp && \
+    mv /build/vosk-model-small-en-us/temp/vosk-model-small-en-us-0.15/* /build/vosk-model-small-en-us/ && \
+    rm -r /build/vosk-model-small-en-us/temp && \
     rm /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip
 
 # Final stage
