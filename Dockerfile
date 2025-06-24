@@ -21,6 +21,7 @@ WORKDIR /build
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 RUN pip3 install scipy
+RUN pip3 install pyzmq
 
 # Copy the source code
 COPY src /build/src
@@ -61,7 +62,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy installed Python packages from builder
-COPY --from=builder /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
+COPY --from=builder /usr/local /usr/local
 
 # Copy the required models
 COPY --from=builder /build/vosk-model-small-en-us-0.15 /app/vosk-model-small-en-us
