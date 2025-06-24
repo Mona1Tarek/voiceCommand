@@ -40,7 +40,7 @@ RUN wget --tries=2 --timeout=10 -O /build/onnx-models/all-MiniLM-L6-v2-onnx/mode
 RUN mkdir -p /build/vosk-model-small-en-us
 RUN wget --tries=2 --timeout=10 -O /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip \
     https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip && \
-    unzip /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip -d /build/vosk-model-small-en-us-0.15 && \
+    unzip /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip -d /build/vosk-model-small-en-us && \
     rm /build/vosk-model-small-en-us/vosk-model-small-en-us-0.15.zip
 
 # Final stage
@@ -68,7 +68,7 @@ RUN pip3 install --force-reinstall pyzmq
 WORKDIR /app
 
 # Copy the required models
-COPY --from=builder /build/vosk-model-small-en-us-0.15 /app/vosk-model-small-en-us
+COPY --from=builder /build/vosk-model-small-en-us /app/vosk-model-small-en-us
 COPY --from=builder /build/onnx-models /app/onnx-models
 
 # Copy the source code
