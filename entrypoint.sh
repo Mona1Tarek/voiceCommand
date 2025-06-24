@@ -3,7 +3,7 @@ set -e
 
 # Ensure we're using the Python virtual environment
 #export PATH="/app/venv/bin:$PATH"
-export PYTHONPATH="/app"
+# export PYTHONPATH="/app"
 
 # Audio device setup and debugging information
 echo "=== Audio Device Information ==="
