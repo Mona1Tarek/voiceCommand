@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Install build dependencies including libzmq3-dev for pyzmq
 RUN apt-get update && apt-get install -y \
-    python3 python3-pip python3-dev \
+    python3.10 python3.10-pip python3.10-dev build-essential \
     libzmq3-dev \
     libasound-dev libportaudio2 libportaudiocpp0 portaudio19-dev \
     pulseaudio-utils pulseaudio \
@@ -20,7 +20,7 @@ WORKDIR /build
 # Install Python dependencies globally
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
-RUN pip3 install pyzmq pyaudio scipy
+RUN pip3 install scipy
 
 # Copy the source code
 COPY src /build/src
@@ -51,13 +51,11 @@ ENV PYTHONPATH="/app"
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
-    python3 python3-pip \
+    python3.10 python3.10-pip \
     libasound-dev libportaudio2 libportaudiocpp0 \
     pulseaudio-utils pulseaudio \
     alsa-utils \
     && rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install pyzmq
 
 # Set working directory
 WORKDIR /app
@@ -71,6 +69,8 @@ COPY --from=builder /build/onnx-models /app/onnx-models
 
 # Copy the source code
 COPY --from=builder /build/src /app/src
+
+RUN python3 -c "import zmq; print('ZMQ Installed:', zmq.__version__)"
 
 # Copy entrypoint
 COPY entrypoint.sh /app/entrypoint.sh
