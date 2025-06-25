@@ -1,11 +1,11 @@
-version: '3.8'
+# version: '3.8'
 
 services:
   vosk-service:
-    image: htmmhmd/voice-command:latest
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    # image: htmmhmd/voice-command:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5555:5555"  # Expose ZMQ port
     volumes:
@@ -16,13 +16,14 @@ services:
       - ./src:/app/src
       - ./data:/app/data
       - /run/user/1000/pulse:/run/pulse:ro  # PulseAudio socket
-      - /home/pi/.config/pulse/cookie:/root/.config/pulse/cookie:ro
+      - /home/mona/.config/pulse/cookie:/root/.config/pulse/cookie:ro
+      
     devices:
       - /dev/snd:/dev/snd
     environment:
       - PYTHONUNBUFFERED=1
       - PULSE_SERVER=unix:/run/pulse/native
-      - PULSE_COOKIE=/root/.config/pulse/cookie
+      # - PULSE_COOKIE=/root/.config/pulse/cookie
     command: /app/entrypoint.sh
     networks:
       - vosk-network

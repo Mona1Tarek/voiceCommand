@@ -78,6 +78,9 @@ COPY --from=builder /build/src /app/src
 
 RUN python3 -c "import zmq; print('ZMQ Installed:', zmq.__version__)"
 
+RUN mkdir -p /root/.config/pulse && \
+    [ ! -d /root/.config/pulse/cookie ] || rm -rf /root/.config/pulse/cookie
+
 # Copy entrypoint
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
