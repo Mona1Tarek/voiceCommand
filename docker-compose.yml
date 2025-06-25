@@ -10,7 +10,7 @@ services:
       - "5555:5555"  # Expose ZMQ port
     volumes:
       # - ./vosk-model-small-en-us-0.15:/app/vosk-model-small-en-us 
-      - ./vosk-model:/app/vosk-model-small-en-us
+      # - ./vosk-model:/app/vosk-model-small-en-us
       - ./.chroma:/app/.chroma
       - ./test:/app/test
       - ./src:/app/src
